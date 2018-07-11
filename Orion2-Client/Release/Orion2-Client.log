@@ -1,0 +1,10 @@
+﻿  Orion.cpp
+C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(1205,5): warning MSB8012: TargetPath(C:\Users\Eric\Desktop\Orion2-Client\Release\Orion2-Client.dll) does not match the Linker's OutputFile property value (C:\Users\Eric\Desktop\Orion2-Client\Release\Orion2.dll). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(1207,5): warning MSB8012: TargetName(Orion2-Client) does not match the Linker's OutputFile property value (Orion2). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+     Creating library C:\Users\Eric\Desktop\Orion2-Client\Release\Orion2-Client.lib and object C:\Users\Eric\Desktop\Orion2-Client\Release\Orion2-Client.exp
+  Generating code
+  5 of 155 functions ( 3.2%) were compiled, the rest were copied from previous compilation.
+    3 functions were new in current compilation
+    2 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  Orion2-Client.vcxproj -> C:\Users\Eric\Desktop\Orion2-Client\Release\Orion2-Client.dll

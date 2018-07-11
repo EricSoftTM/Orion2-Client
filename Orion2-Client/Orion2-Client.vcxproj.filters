@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\NMCO">
+      <UniqueIdentifier>{d0e1590d-a3f8-4fe4-833f-fde32add7fb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Themida">
+      <UniqueIdentifier>{e329ff06-c946-489e-9ef6-cd63ce76e071}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Themida">
+      <UniqueIdentifier>{7e9c1afe-75de-4c2c-9506-897c2b768330}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\NMCO">
+      <UniqueIdentifier>{0f057d79-5167-4721-bf6c-1eb61af9556a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Themida\SecureEngineCustomVMs.h">
+      <Filter>Header Files\Themida</Filter>
+    </ClInclude>
+    <ClInclude Include="Themida\SecureEngineCustomVMs_BorlandC_inline.h">
+      <Filter>Header Files\Themida</Filter>
+    </ClInclude>
+    <ClInclude Include="Themida\SecureEngineCustomVMs_GNU_inline.h">
+      <Filter>Header Files\Themida</Filter>
+    </ClInclude>
+    <ClInclude Include="Themida\SecureEngineCustomVMs_ICL_inline.h">
+      <Filter>Header Files\Themida</Filter>
+    </ClInclude>
+    <ClInclude Include="Themida\SecureEngineCustomVMs_LCC_inline.h">
+      <Filter>Header Files\Themida</Filter>
+    </ClInclude>
+    <ClInclude Include="Themida\SecureEngineCustomVMs_VC_inline.h">
+      <Filter>Header Files\Themida</Filter>
+    </ClInclude>
+    <ClInclude Include="Themida\ThemidaSDK.h">
+      <Filter>Header Files\Themida</Filter>
+    </ClInclude>
+    <ClInclude Include="NMCO\NMDataObject.h">
+      <Filter>Header Files\NMCO</Filter>
+    </ClInclude>
+    <ClInclude Include="NMCO\NMFunctionObject.h">
+      <Filter>Header Files\NMCO</Filter>
+    </ClInclude>
+    <ClInclude Include="NMCO\NMGeneral.h">
+      <Filter>Header Files\NMCO</Filter>
+    </ClInclude>
+    <ClInclude Include="NMCO\NMSerializable.h">
+      <Filter>Header Files\NMCO</Filter>
+    </ClInclude>
+    <ClInclude Include="APIDummy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="detours.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NMCOHook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Orion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OrionHacks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WinSockHook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="APIDummy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Orion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OrionHacks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WinSockHook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NMCO\NMDataObject.cpp">
+      <Filter>Source Files\NMCO</Filter>
+    </ClCompile>
+    <ClCompile Include="NMCO\NMFunctionObject.cpp">
+      <Filter>Source Files\NMCO</Filter>
+    </ClCompile>
+    <ClCompile Include="NMCO\NMSerializable.cpp">
+      <Filter>Source Files\NMCO</Filter>
+    </ClCompile>
+    <ClCompile Include="NMCOHook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="detours.lib">
+      <Filter>Resource Files</Filter>
+    </Library>
+    <Library Include="Themida\SecureEngineSDK32.lib">
+      <Filter>Resource Files\Themida</Filter>
+    </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="detours.pdb">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>
