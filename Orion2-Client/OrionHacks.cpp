@@ -180,8 +180,25 @@ void WriteAoB(DWORD dwAddress, const char* sBytes) {
 			++uBufLen;
 	}
 
-	// Copy the new buffer to the address given, writing uBufLen bytes
-	memcpy(reinterpret_cast<void*>(dwAddress), pBuff, uBufLen);
+	DWORD dwOldProtect;
+	DWORD dwOldAddr;
+	DWORD dwOldSize;
+	__try {
+		/* Since the location in memory is Read Only, obtain Write Access and then modify pointer */
+		if (VirtualProtect((DWORD *) dwAddress, uBufLen, PAGE_EXECUTE_READWRITE, &dwOldProtect)) {
+			dwOldAddr = (DWORD)dwAddress;
+			dwOldSize = uBufLen;
+
+			/* Copy the new buffer to the address given, writing uBufLen bytes */
+			memcpy(reinterpret_cast<void*>(dwAddress), pBuff, uBufLen);
+
+			/* Restore the Read Only protection at the given location */
+			DWORD old;
+			VirtualProtect((DWORD *)dwOldAddr, dwOldSize, dwOldProtect, &old);
+		}
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER) {
+	}
 }
 
 /* Writes an unsigned byte to memory at the provided address */
