@@ -39,6 +39,7 @@
 #define DROPPABLE_NX	FALSE /* Enable droppable NX */
 #define ENABLE_IME		FALSE /* Enable Microsoft IME */
 #define MULTI_CLIENT	FALSE /* Enable multi-client */
+#define DISABLE_NXL		TRUE /* Enables LoginUI for user/pass instead of NXL passport */
 
 /* Other constants */
 #define STRING_LOCALE	"kor" /* The application's string locale by default is Korean(kor) */

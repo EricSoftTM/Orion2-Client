@@ -14,15 +14,6 @@ bool InitializeOrion2() {
 
 	if (dwNXLBypass1 <= 10 || dwNXLBypass2 <= 10) {
 		return false;
-	} else {
-		/*NotifyDbgMessage("NXL Bypass (1) Found: %08X\r\nNXL Bypass (2) Found: %08X\r\nSwear Filter Address Found: %08X", dwNXLBypass1, dwNXLBypass2, dwSwearFilter);
-
-		char data[5];
-		memcpy(reinterpret_cast<void*>(data), reinterpret_cast<void*>(dwNXLBypass1), 5 * sizeof(char));
-		NotifyDbgMessage("[NXL1] Data: %02X %02X %02X %02X %02X", (BYTE)data[0], (BYTE)data[1], (BYTE)data[2], (BYTE)data[3], (BYTE)data[4]);
-
-		memcpy(reinterpret_cast<void*>(data), reinterpret_cast<void*>(dwNXLBypass2), 5 * sizeof(char));
-		NotifyDbgMessage("[NXL2] Data: %02X %02X %02X %02X %02X", (BYTE)data[0], (BYTE)data[1], (BYTE)data[2], (BYTE)data[3], (BYTE)data[4]);*/
 	}
 
 	/* Bypass Nexon Launcher Server Checks */
@@ -30,6 +21,10 @@ bool InitializeOrion2() {
 
 	/* Bypass Nexon Launcher IP Checks */
 	WriteAoB(dwNXLBypass2, "B8 00 00 00 00");
+
+	if (DISABLE_NXL) {
+		WriteAoB(0x0057CE60, "B8 00 00 00 00");
+	}
 
 	if (CHAT_SPAM) {
 		// TODO: Figure out how to bypass chat spam detection.
