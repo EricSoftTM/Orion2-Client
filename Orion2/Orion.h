@@ -35,7 +35,7 @@
 /* Client hacks/customization constants */
 #define CHAT_SPAM		FALSE /* Enable chat spam */
 #define CHAT_LENGTH		127 /* Custom chat text length */
-#define SWEAR_FILTER	FALSE /* Enable swear filter */
+#define SWEAR_FILTER	TRUE /* Enable swear filter */
 #define DROPPABLE_NX	FALSE /* Enable droppable NX */
 #define ENABLE_IME		FALSE /* Enable Microsoft IME */
 #define MULTI_CLIENT	FALSE /* Enable multi-client */
