@@ -23,7 +23,7 @@ bool InitializeOrion2() {
 	WriteAoB(dwNXLBypass2, "B8 00 00 00 00");
 
 	if (DISABLE_NXL) {
-		WriteAoB(0x0058AF70, "B8 00 00 00 00");
+		WriteAoB(0x0058B400, "B8 00 00 00 00");
 	}
 
 	if (CHAT_SPAM) {
