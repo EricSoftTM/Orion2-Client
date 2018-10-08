@@ -5,54 +5,66 @@
 *
 */
 #include "OrionHacks.h"
+#include "Themida/ThemidaSDK.h"
 
 /* Initializes all memory alterations used for Orion2 */
 bool InitializeOrion2() {
+	VM_START
+
 	DWORD dwSwearFilter = FindAoB("E8 ?? AC ?? 00 83 C4 08 8B CE E8 ?? ?? FF FF ?? ?? ?? ?? ??", 0, 0, 0) + 0xA;//Confirmed v1~v9
-	DWORD dwNXLBypass1 = FindAoB("E8 ?? ?? ?? FF ?? ?? ?? ?? ?? ?? ?? 00 ?? ?? ?? ?? ?? ?? ?? 8B ?? 8B 42 ?? FF D0 ?? ?? ?? ?? ?? 01 ?? ?? ?? ?? ?? ?? ??", 0, 0, 0);//Confirmed v1~v9
-	DWORD dwNXLBypass2 = FindAoB("83 C4 04 85 C0 74 08 33 C0 5F 5E 8B E5 5D C3 E8 ?? ?? ?? FF 85 C0 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ??", 0, 0, 0) + 0xF;//Confirmed v1~v9
+	DWORD dwNXLBypass1 = FindAoB("E8 ?? ?? ?? FF ?? ?? ?? ?? ?? ?? ?? 00 ?? ?? ?? ?? ?? ?? ?? 8B ?? 8B 42 ?? FF D0 ?? ?? ?? ?? ?? ?? ??", 0, 0, 0);//Confirmed v1~v55
+	DWORD dwNXLBypass2 = FindAoB("83 C4 04 85 C0 74 08 33 C0 5F 5E 8B E5 5D C3 E8 ?? ?? ?? FF 85 C0 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ??", 0, 0, 0) + 0xF;//Confirmed v1~v55
+	DWORD dwDisableNXL = FindAoB("B8 01 00 00 00 C3 CC CC CC CC CC CC CC CC CC CC 55 8B EC 6A FF 68 ?? ?? ?? 01 64 A1 00 00 00 00", 0, 0, 1);//Confirmed v9~v55 (v1 is 2 skips)
 
-	if (dwNXLBypass1 <= 10 || dwNXLBypass2 <= 10) {
-		return false;
-	}
-
-	/* Bypass Nexon Launcher Server Checks */
-	WriteAoB(dwNXLBypass1, "B8 00 00 00 00");
-
-	/* Bypass Nexon Launcher IP Checks */
-	WriteAoB(dwNXLBypass2, "B8 00 00 00 00");
-
+	bool bInit = true;
 	if (DISABLE_NXL) {
-		WriteAoB(0x0058B400, "B8 00 00 00 00");
+		if (dwDisableNXL > 0x40000) {
+			WriteAoB(dwDisableNXL, "B8 00 00 00 00");
+		} else {
+			bInit = false;
+		}
+	} else {
+		if (dwNXLBypass1 > 0x40000 && dwNXLBypass2 > 0x40000) {
+			/* Bypass Nexon Launcher Server Checks */
+			WriteAoB(dwNXLBypass1, "B8 00 00 00 00");
+
+			/* Bypass Nexon Launcher IP Checks */
+			WriteAoB(dwNXLBypass2, "B8 00 00 00 00");
+		} else {
+			bInit = false;
+		}
 	}
 
-	if (CHAT_SPAM) {
-		// TODO: Figure out how to bypass chat spam detection.
-	}
+	if (bInit) {
+		if (CHAT_SPAM) {
+			// TODO: Figure out how to bypass chat spam detection.
+		}
 
-	if (CHAT_LENGTH > 50) {
-		// TODO: Figure out how to modify the chat length cap (default max: 50).
-	}
+		if (CHAT_LENGTH > 50) {
+			// TODO: Figure out how to modify the chat length cap (default max: 50).
+		}
 
-	if (SWEAR_FILTER) {
-		/* Bypasses the "banWord" checks to allow cursing. */
-		WriteAoB(dwSwearFilter, "90 90 90 90 90");
-	}
+		if (SWEAR_FILTER) {
+			/* Bypasses the "banWord" checks to allow cursing. */
+			WriteAoB(dwSwearFilter, "90 90 90 90 90");
+		}
 
-	if (DROPPABLE_NX) {
-		// TODO: Figure out how to bypass NX item checks.
-	}
+		if (DROPPABLE_NX) {
+			// TODO: Figure out how to bypass NX item checks.
+		}
 
-	if (ENABLE_IME) {
-		// TODO
-	}
+		if (ENABLE_IME) {
+			// TODO
+		}
 
-	if (MULTI_CLIENT) {
-		// Enable Multi-Client
-		InitializeMultiClient();
+		if (MULTI_CLIENT) {
+			// Enable Multi-Client
+			InitializeMultiClient();
+		}
 	}
-
-	return true;
+	
+	VM_END
+	return bInit;
 }
 
 /* Enables the use of Multi-Client (preferrably for Admin Client) */

@@ -7,13 +7,6 @@
 #include "Orion.h"
 #include "OrionHacks.h"
 
-/* PE Start (0x401000) */
-DWORD dwCrcStart;
-/* PE End */
-DWORD dwCrcEnd;
-/* PE Memory Dump */
-BYTE* pCrc32;
-
 /* Initializing Memory Alterations */
 BOOL bInitialized = FALSE;
 
@@ -44,9 +37,7 @@ bool Hook_GetCurrentDirectoryA(bool bEnable) {
 		if (!bInitialized) {
 			if (InitializeOrion2()) {
 				bInitialized = TRUE;
-			}
-			else {
-				NotifyMessage("Orion2 memory alterations FAILED!", Orion::NotifyType::Error);
+			} else {
 				return FALSE;
 			}
 		}
@@ -55,40 +46,6 @@ bool Hook_GetCurrentDirectoryA(bool bEnable) {
 	};
 
 	return SetHook(bEnable, reinterpret_cast<void**>(&_GetCurrentDirectoryA), GetCurrentDirectoryA_Hook);
-}
-
-/* MapleStory2 CRC32 hook used to bypass CRC checks from all the memory edit rape */
-void Hook_CRC() {
-	dwCrcStart = reinterpret_cast<unsigned int>(GetModuleHandleA("MapleStory2.exe"));
-
-	if (dwCrcStart != 0) {
-		DWORD dwCrcSize = PIMAGE_NT_HEADERS(dwCrcStart + PIMAGE_DOS_HEADER(dwCrcStart)->e_lfanew)->OptionalHeader.SizeOfImage;
-
-		pCrc32 = reinterpret_cast<unsigned char*>(malloc(dwCrcSize));
-		memcpy(pCrc32, reinterpret_cast<void*>(dwCrcStart), dwCrcSize);
-
-		dwCrcEnd = dwCrcStart + dwCrcSize;
-
-		// From what I can tell, there isn't much (if any?) CRC detection in the MS2 client.
-	}
-}
-
-/* RegisterClassExA hook used for all of our various memory alterations */
-bool Hook_RegisterClassExA() {
-	static decltype(&RegisterClassExA) _RegisterClassExA = RegisterClassExA;
-
-	decltype(&RegisterClassExA) RegisterClassExA_Hook = [](const WNDCLASSEXA* lpwcx) -> ATOM {
-		if (lpwcx->lpszClassName) {
-			if (!strcmp(lpwcx->lpszClassName, "MapleStory2")) {
-				// Apply the CRC bypass after main class load
-				Hook_CRC();
-			}
-		}
-
-		return _RegisterClassExA(lpwcx);
-	};
-
-	return SetHook(true, reinterpret_cast<void**>(&_RegisterClassExA), RegisterClassExA_Hook);
 }
 
 /* A defaulted MessageBox */

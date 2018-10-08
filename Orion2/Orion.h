@@ -31,15 +31,16 @@
 #define CLIENT_NAME		"Orion2 - A New Beginning"
 #define CLIENT_IP		"127.0.0.1"
 #define ADMIN_CLIENT	FALSE
+#define DEBUG_MODE		FALSE
 
 /* Client hacks/customization constants */
 #define CHAT_SPAM		FALSE /* Enable chat spam */
 #define CHAT_LENGTH		127 /* Custom chat text length */
-#define SWEAR_FILTER	TRUE /* Enable swear filter */
+#define SWEAR_FILTER	FALSE /* Enable swear filter */
 #define DROPPABLE_NX	FALSE /* Enable droppable NX */
 #define ENABLE_IME		FALSE /* Enable Microsoft IME */
 #define MULTI_CLIENT	FALSE /* Enable multi-client */
-#define DISABLE_NXL		TRUE /* Enables LoginUI for user/pass instead of NXL passport */
+#define DISABLE_NXL		TRUE /* Universally disabled all NXL functionality (enables LoginUI for user/pass) */
 
 /* Other constants */
 #define STRING_LOCALE	"kor" /* The application's string locale by default is Korean(kor) */
@@ -49,12 +50,12 @@
 #define MAX_BUFFER		1024 /* Maximum buffer size used for various arrays */
 
 class Orion {
-public:
-	enum NotifyType {
-		None		= 0,
-		Information = MB_OK | MB_ICONINFORMATION,
-		Error		= MB_OK | MB_ICONERROR
-	};
+	public:
+		enum NotifyType {
+			None		= 0,
+			Information = MB_OK | MB_ICONINFORMATION,
+			Error		= MB_OK | MB_ICONERROR
+		};
 
 };
 
@@ -64,15 +65,11 @@ BOOL SetHook(__in BOOL bInstall, __inout PVOID* ppvTarget, __in PVOID pvDetour);
 /* Win32 hooks */
 bool Hook_GetCurrentDirectoryA(bool);
 bool Hook_CreateWindowExA(bool);
-bool Hook_RegisterClassExA();
 
 /* MessageBox debugging */
 void NotifyMessage(const char*);
 void NotifyMessage(const char*, int);
 void NotifyDbgMessage(const char*, ...);
 void NotifyDbgMessageW(const wchar_t*, ...);
-
-/* Other */
-
 
 #endif

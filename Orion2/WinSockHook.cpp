@@ -28,9 +28,11 @@ int WINAPI WSPConnect_Hook(SOCKET s, sockaddr* name, int namelen, LPWSABUF lpCal
 	DWORD dwStringLength = 50;
 	WSAAddressToStringA(reinterpret_cast<sockaddr*>(name), namelen, NULL, pBuff, &dwStringLength);
 
-	//NotifyDbgMessage("[WSPConnect] Detected connection to remote address: %s", pBuff);
+#if DEBUG_MODE
+	printf("[WSPConnect_Hook] Connecting to socket address: %s\n", pBuff);
+#endif
 
-	/* Check if the returned IP buffer contains the host address */
+	VM_START
 	if (strstr(pBuff, NEXON_IP_NA) || strstr(pBuff, NEXON_IP_SA) || strstr(pBuff, NEXON_IP_EU)) {
 		/* Initialize the re-reoute socket address to redirect to */
 		dwRouteAddress = inet_addr(CLIENT_IP);
@@ -41,7 +43,7 @@ int WINAPI WSPConnect_Hook(SOCKET s, sockaddr* name, int namelen, LPWSABUF lpCal
 		/* Update the host address to the route address */
 		memcpy(&addr->sin_addr, &dwRouteAddress, sizeof(DWORD));
 	}
-
+	VM_END
 	return _WSPConnect(s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, lpErrno);
 }
 
@@ -64,25 +66,25 @@ int WINAPI WSPGetPeerName_Hook(SOCKET s, sockaddr* name, LPINT namelen, LPINT lp
 
 /* Hooks the Winsock Service Provider's Startup function to initiate the SPI and spoof the socket */
 bool Hook_WSPStartup(bool bEnable) {
-	VM_START
+	/* Initialize the WSPStartup module and jump to hook if successful */
+	if (!_WSPStartup) {
+		VM_START
+		HMODULE hModule = LoadLibraryA("MSWSOCK");
 
-		/* Initialize the WSPStartup module and jump to hook if successful */
-		if (!_WSPStartup) {
-			HMODULE hModule = LoadLibraryA("MSWSOCK");
+		if (hModule) {
+			_WSPStartup = reinterpret_cast<LPWSPSTARTUP>(GetProcAddress(hModule, "WSPStartup"));
 
-			if (hModule) {
-				_WSPStartup = reinterpret_cast<LPWSPSTARTUP>(GetProcAddress(hModule, "WSPStartup"));
-
-				if (_WSPStartup) {
-					goto Hook;
-				}
+			if (_WSPStartup) {
+				goto Hook;
 			}
-
-			return false;
 		}
+		VM_END
+		return false;
+	}
 
 Hook:
 	LPWSPSTARTUP WSPStartup_Hook = [](WORD wVersionRequested, LPWSPDATA lpWSPData, LPWSAPROTOCOL_INFOW lpProtocolInfo, WSPUPCALLTABLE UpcallTable, LPWSPPROC_TABLE lpProcTable) -> int {
+		VM_START
 		int nResult = _WSPStartup(wVersionRequested, lpWSPData, lpProtocolInfo, UpcallTable, lpProcTable);
 
 		if (nResult == 0) {
@@ -94,12 +96,10 @@ Hook:
 			_WSPGetPeerName = lpProcTable->lpWSPGetPeerName;
 			lpProcTable->lpWSPGetPeerName = WSPGetPeerName_Hook;
 		}
-
+		VM_END
 		return nResult;
 	};
 
 	/* Enable the WSPStartup hook */
 	return SetHook(bEnable, reinterpret_cast<void**>(&_WSPStartup), WSPStartup_Hook);
-
-	VM_END
 }
