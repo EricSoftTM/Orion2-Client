@@ -36,7 +36,7 @@
 /* Client hacks/customization constants */
 #define CHAT_SPAM		FALSE /* Enable chat spam */
 #define CHAT_LENGTH		127 /* Custom chat text length */
-#define SWEAR_FILTER	FALSE /* Enable swear filter */
+#define SWEAR_FILTER	TRUE /* Enable swear filter */
 #define DROPPABLE_NX	FALSE /* Enable droppable NX */
 #define ENABLE_IME		FALSE /* Enable Microsoft IME */
 #define MULTI_CLIENT	FALSE /* Enable multi-client */
@@ -63,8 +63,10 @@ class Orion {
 BOOL SetHook(__in BOOL bInstall, __inout PVOID* ppvTarget, __in PVOID pvDetour);
 
 /* Win32 hooks */
-bool Hook_GetCurrentDirectoryA(bool);
 bool Hook_CreateWindowExA(bool);
+bool Hook_GetCurrentDirectoryA(bool);
+
+void InitUnhandledExceptionFilter();
 
 /* MessageBox debugging */
 void NotifyMessage(const char*);

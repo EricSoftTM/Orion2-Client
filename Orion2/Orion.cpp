@@ -48,6 +48,48 @@ bool Hook_GetCurrentDirectoryA(bool bEnable) {
 	return SetHook(bEnable, reinterpret_cast<void**>(&_GetCurrentDirectoryA), GetCurrentDirectoryA_Hook);
 }
 
+int LogReport(/*ZExceptionHandler *this,*/ const char *sFormat, ...) {
+	CHAR sBuff[4096] = { 0 };
+	va_list arglist;
+
+	va_start(arglist, sFormat);
+
+	int v2 = wvsprintfA((LPSTR)(&sBuff), sFormat, arglist);
+
+	OutputDebugStringA(sBuff);
+
+	va_end(arglist);
+
+	return v2;
+}
+
+LONG WINAPI DumpUnhandledException(LPEXCEPTION_POINTERS pExceptionInfo) {
+	LogReport("==== DumpUnhandledException ==============================\r\n");
+
+	auto v6 = pExceptionInfo->ExceptionRecord;
+	LogReport("Fault Address : %08X\r\n", v6->ExceptionAddress);
+	LogReport("Exception code: %08X\r\n", v6->ExceptionCode);
+
+	auto v8 = pExceptionInfo->ContextRecord;
+	LogReport("Registers:\r\n");
+	LogReport(
+		"EAX:%08X\r\nEBX:%08X\r\nECX:%08X\r\nEDX:%08X\r\nESI:%08X\r\nEDI:%08X\r\n",
+		v8->Eax, v8->Ebx, v8->Ecx,
+		v8->Edx, v8->Esi, v8->Edi);
+	LogReport("CS:EIP:%04X:%08X\r\n", v8->SegCs, v8->Eip);
+	LogReport("SS:ESP:%04X:%08X  EBP:%08X\r\n", v8->SegSs, v8->Esp, v8->Ebp);
+	LogReport("DS:%04X  ES:%04X  FS:%04X  GS:%04X\r\n", v8->SegDs, v8->SegEs, v8->SegFs, v8->SegGs);
+	LogReport("Flags:%08X\r\n", v8->EFlags);
+
+	LogReport("\r\n");
+
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+
+void InitUnhandledExceptionFilter() {
+	SetUnhandledExceptionFilter(DumpUnhandledException);
+}
+
 /* A defaulted MessageBox */
 void NotifyMessage(const char* sText) {
 	NotifyMessage(sText, Orion::NotifyType::None);
