@@ -26,25 +26,33 @@ int WINAPI WSPConnect_Hook(SOCKET s, sockaddr* name, int namelen, LPWSABUF lpCal
 	/* Retrieve a string buffer of the current socket address (IP) */
 	char pBuff[50];
 	DWORD dwStringLength = 50;
-	WSAAddressToStringA(reinterpret_cast<sockaddr*>(name), namelen, NULL, pBuff, &dwStringLength);
+	WSAAddressToStringA(name, namelen, NULL, pBuff, &dwStringLength);
 
-#if DEBUG_MODE
-	printf("[WSPConnect_Hook] Connecting to socket address: %s\n", pBuff);
-#endif
+	sockaddr_in* addr = reinterpret_cast<sockaddr_in*>(name);
+	unsigned short pPort = addr->sin_port;
 
 	VM_START
-	if (strstr(pBuff, NEXON_IP_NA) || strstr(pBuff, NEXON_IP_SA) || strstr(pBuff, NEXON_IP_EU)) {
-		/* Initialize the re-reoute socket address to redirect to */
-		dwRouteAddress = inet_addr(CLIENT_IP);
-		
-		sockaddr_in* addr = reinterpret_cast<sockaddr_in*>(name);
-		/* Copy the original host address and back it up */
-		memcpy(&dwHostAddress, &addr->sin_addr, sizeof(DWORD));
-		/* Update the host address to the route address */
-		memcpy(&addr->sin_addr, &dwRouteAddress, sizeof(DWORD));
-	}
+		if (strstr(pBuff, NEXON_IP_NA) || strstr(pBuff, NEXON_IP_SA) || strstr(pBuff, NEXON_IP_EU)) {
+			/* Initialize the re-reoute socket address to redirect to */
+			dwRouteAddress = inet_addr(CLIENT_IP);
+
+#if DEBUG_MODE
+			printf("[WSPConnect_Hook] Patching to new address: %s\n", CLIENT_IP);
+#endif
+
+			/* Copy the original host address and back it up */
+			memcpy(&dwHostAddress, &addr->sin_addr, sizeof(DWORD));
+			/* Update the host address to the route address */
+			memcpy(&addr->sin_addr, &dwRouteAddress, sizeof(DWORD));
+		}
+		else
+		{
+#if DEBUG_MODE
+			printf("[WSPConnect_Hook] Connecting to socket address: %s\n", pBuff);
+#endif
+		}
 	VM_END
-	return _WSPConnect(s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, lpErrno);
+		return _WSPConnect(s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, lpErrno);
 }
 
 /* Hooks the Winsock Service Provider's GetPeerName function to pretend to be connected to the host */

@@ -48,6 +48,8 @@
 #define NEXON_IP_SA		"52.171.48" /* Nexon's South America IP pattern to search for upon hook */
 #define NEXON_IP_EU		"13.65.17" /* Nexon's Europe IP pattern to search for upon hook */
 #define MAX_BUFFER		1024 /* Maximum buffer size used for various arrays */
+#define MUTLI_MUTEX		"Global\\7D9D84AE-A653-4C89-A004-26E262ECE0C4"
+#define CLIENT_CLASS    "MapleStory2"
 
 class Orion {
 	public:
@@ -69,6 +71,7 @@ bool Hook_CreateMutexA(bool);
 bool RedirectProcess();
 
 void InitUnhandledExceptionFilter();
+//void* InitVectoredExceptionHandler();
 
 /* MessageBox debugging */
 void NotifyMessage(const char*);

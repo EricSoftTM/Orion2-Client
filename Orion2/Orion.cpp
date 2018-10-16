@@ -16,10 +16,9 @@ bool Hook_CreateWindowExA(bool bEnable) {
 
 	decltype(&CreateWindowExA) CreateWindowExA_Hook = [](DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam) -> HWND {
 
-		if (strstr(lpClassName, "MapleStory2")) {
+		if (strstr(lpClassName, CLIENT_CLASS)) {
 			//NotifyMessage("Orion2 has loaded all data successfully!\r\n\r\nPress OK to launch the game~", Orion::NotifyType::Information);
-
-			return _CreateWindowExA(dwExStyle, lpClassName, CLIENT_NAME, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+			lpWindowName = CLIENT_CLASS;
 		}
 
 		return _CreateWindowExA(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
@@ -32,7 +31,7 @@ bool Hook_CreateMutexA(bool bEnable) {
 	static decltype(&CreateMutexA) _CreateMutexA = &CreateMutexA;
 
 	decltype(&CreateMutexA) CreateMutexA_Hook = [](LPSECURITY_ATTRIBUTES lpMutexAttributes, BOOL bInitialOwner, LPCSTR lpName) -> HANDLE {
-		if (lpName && !lstrcmpiA(lpName, "Global\\7D9D84AE-A653-4C89-A004-26E262ECE0C4")) {
+		if (lpName && !lstrcmpiA(lpName, MUTLI_MUTEX)) {
 			HANDLE hHandle = _CreateMutexA(lpMutexAttributes, bInitialOwner, lpName);
 
 			HANDLE hMaple;
@@ -100,7 +99,7 @@ bool RedirectProcess() {
 	return true;
 }
 
-int LogReport(/*ZExceptionHandler *this,*/ const char *sFormat, ...) {
+int LogReport(const char *sFormat, ...) {
 	CHAR sBuff[4096] = { 0 };
 	va_list arglist;
 
@@ -141,6 +140,63 @@ LONG WINAPI DumpUnhandledException(LPEXCEPTION_POINTERS pExceptionInfo) {
 void InitUnhandledExceptionFilter() {
 	SetUnhandledExceptionFilter(DumpUnhandledException);
 }
+
+/* TODO: Confirm this works for MS2 (ZException object?) - Hydromoph */
+//void* InitVectoredExceptionHandler() {
+//	typedef const struct
+//	{
+//		unsigned int magic;
+//		void* object;
+//		_ThrowInfo* info;
+//	} CxxThrowExceptionObject;
+//
+//	typedef struct ZException
+//	{
+//		HRESULT m_hr;
+//	} ZException;
+//
+//	PVECTORED_EXCEPTION_HANDLER Handler = [](EXCEPTION_POINTERS* pExceptionInfo) -> long
+//	{
+//		if (pExceptionInfo->ExceptionRecord->ExceptionCode == 0xE06D7363) // C++ Exceptions
+//		{
+//			CxxThrowExceptionObject* exception_object = reinterpret_cast<CxxThrowExceptionObject*>(pExceptionInfo->ExceptionRecord->ExceptionInformation);
+//
+//			if (exception_object->magic == 0x19930520 && exception_object->info->pCatchableTypeArray->nCatchableTypes > 0)
+//			{
+//				typedef struct ZException
+//				{
+//					HRESULT m_hr;
+//				} ZException;
+//
+//				ZException* exc = reinterpret_cast<ZException*>(exception_object->object);
+//				printf("CMSException: %s - %08X\n", exception_object->info->pCatchableTypeArray->arrayOfCatchableTypes[0]->pType->name, exc->m_hr);
+//			}
+//		}
+//		else if (pExceptionInfo->ExceptionRecord->ExceptionCode != STATUS_PRIVILEGED_INSTRUCTION && pExceptionInfo->ExceptionRecord->ExceptionCode != DBG_PRINTEXCEPTION_C)
+//		{
+//			if (pExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_HEAP_CORRUPTION || pExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
+//			{
+//				if (pExceptionInfo->ExceptionRecord->ExceptionAddress != 0)
+//				{
+//					printf("RegException: %08X (%08X)\n", pExceptionInfo->ExceptionRecord->ExceptionCode, pExceptionInfo->ExceptionRecord->ExceptionAddress);
+//
+//					FILE* ff = fopen("C:\\exc.txt", "a+");
+//
+//					for (int i = 0; i < 0x400; i += 4)
+//						fprintf(ff, "Esp+%02X = %08X\n", i, *(DWORD*)(pExceptionInfo->ContextRecord->Esp + i));
+//
+//					fclose(ff);
+//				}
+//			}
+//			else
+//				printf("RegException: %08X (%08X)\n", pExceptionInfo->ExceptionRecord->ExceptionCode, pExceptionInfo->ExceptionRecord->ExceptionAddress);
+//		}
+//
+//		return EXCEPTION_CONTINUE_SEARCH;
+//	};
+//
+//	return AddVectoredExceptionHandler(1, Handler);
+//}
 
 /* A defaulted MessageBox */
 void NotifyMessage(const char* sText) {
