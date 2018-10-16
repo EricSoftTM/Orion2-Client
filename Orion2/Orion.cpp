@@ -28,6 +28,24 @@ bool Hook_CreateWindowExA(bool bEnable) {
 	return SetHook(bEnable, reinterpret_cast<void**>(&_CreateWindowExA), CreateWindowExA_Hook);
 }
 
+bool Hook_CreateMutexA(bool bEnable) {
+	static decltype(&CreateMutexA) _CreateMutexA = &CreateMutexA;
+
+	decltype(&CreateMutexA) CreateMutexA_Hook = [](LPSECURITY_ATTRIBUTES lpMutexAttributes, BOOL bInitialOwner, LPCSTR lpName) -> HANDLE {
+		if (lpName && !lstrcmpiA(lpName, "Global\\7D9D84AE-A653-4C89-A004-26E262ECE0C4")) {
+			HANDLE hHandle = _CreateMutexA(lpMutexAttributes, bInitialOwner, lpName);
+
+			HANDLE hMaple;
+			DuplicateHandle(GetCurrentProcess(), hHandle, 0, &hMaple, 0, FALSE, DUPLICATE_CLOSE_SOURCE);
+			CloseHandle(hMaple);
+			return hHandle;
+		}
+		return _CreateMutexA(lpMutexAttributes, bInitialOwner, lpName);
+	};
+
+	return SetHook(bEnable, reinterpret_cast<void**>(&_CreateMutexA), CreateMutexA_Hook);
+}
+
 /* Best way to inject into client memory after class load: hook GetCurrentDirectoryA(). */
 bool Hook_GetCurrentDirectoryA(bool bEnable) {
 	static decltype(&GetCurrentDirectoryA) _GetCurrentDirectoryA = &GetCurrentDirectoryA;
@@ -46,6 +64,40 @@ bool Hook_GetCurrentDirectoryA(bool bEnable) {
 	};
 
 	return SetHook(bEnable, reinterpret_cast<void**>(&_GetCurrentDirectoryA), GetCurrentDirectoryA_Hook);
+}
+
+bool RedirectProcess() {
+	//"C:\Nexon\Library\maplestory2\appdata\MapleStory2.exe" "127.0.0.1" 20001 --nxapp=nxl --lc=en-US
+	LPTSTR sCmd = GetCommandLine();
+
+	if (!strstr(sCmd, "nxapp")) {
+		char sFileName[MAX_PATH];
+		std::string strFileName = std::string(sFileName, GetModuleFileName(NULL, sFileName, MAX_PATH));
+		std::string strCmd = std::string(sCmd);
+		strCmd += " \"127.0.0.1\"";//IP
+		strCmd += " 20001";//Port
+		strCmd += " --nxapp=nxl";
+		strCmd += " --lc=en-US";//Locale
+
+		LPSTR lpProgramPath = _tcsdup(&strFileName[0]);
+		LPSTR lpCommandLine = _tcsdup(TEXT(&strCmd[0]));
+
+		PROCESS_INFORMATION p_info;
+		STARTUPINFO s_info;
+		memset(&s_info, 0, sizeof(s_info));
+		memset(&p_info, 0, sizeof(p_info));
+		s_info.cb = sizeof(s_info);
+		if (CreateProcess(lpProgramPath, lpCommandLine, NULL, NULL, 0, 0, NULL, NULL, &s_info, &p_info)) {
+			Sleep(2000);//Open in current window handle
+			exit(0);//Exit this process so it doesn't redirect
+			WaitForSingleObject(p_info.hProcess, INFINITE);
+			CloseHandle(p_info.hProcess);
+			CloseHandle(p_info.hThread);
+			return true;
+		}
+		return false;
+	}
+	return true;
 }
 
 int LogReport(/*ZExceptionHandler *this,*/ const char *sFormat, ...) {

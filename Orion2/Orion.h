@@ -31,7 +31,7 @@
 #define CLIENT_NAME		"Orion2 - A New Beginning"
 #define CLIENT_IP		"127.0.0.1"
 #define ADMIN_CLIENT	FALSE
-#define DEBUG_MODE		FALSE
+#define DEBUG_MODE		TRUE
 
 /* Client hacks/customization constants */
 #define CHAT_SPAM		FALSE /* Enable chat spam */
@@ -65,6 +65,8 @@ BOOL SetHook(__in BOOL bInstall, __inout PVOID* ppvTarget, __in PVOID pvDetour);
 /* Win32 hooks */
 bool Hook_CreateWindowExA(bool);
 bool Hook_GetCurrentDirectoryA(bool);
+bool Hook_CreateMutexA(bool);
+bool RedirectProcess();
 
 void InitUnhandledExceptionFilter();
 
