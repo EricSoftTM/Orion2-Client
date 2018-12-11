@@ -34,12 +34,9 @@ bool Hook_CreateMutexA(bool bEnable) {
 		if (lpName && !lstrcmpiA(lpName, MUTLI_MUTEX)) {
 			HANDLE hHandle = _CreateMutexA(lpMutexAttributes, bInitialOwner, lpName);
 
-			if (hHandle) {
-				HANDLE hMaple;
-				DuplicateHandle(GetCurrentProcess(), hHandle, 0, &hMaple, 0, FALSE, DUPLICATE_CLOSE_SOURCE);
-				CloseHandle(hMaple);
-			}
-
+			HANDLE hMaple;
+			DuplicateHandle(GetCurrentProcess(), hHandle, 0, &hMaple, 0, FALSE, DUPLICATE_CLOSE_SOURCE);
+			CloseHandle(hMaple);
 			return hHandle;
 		}
 		return _CreateMutexA(lpMutexAttributes, bInitialOwner, lpName);
@@ -57,8 +54,7 @@ bool Hook_GetCurrentDirectoryA(bool bEnable) {
 		if (!bInitialized) {
 			if (InitializeOrion2()) {
 				bInitialized = TRUE;
-			}
-			else {
+			} else {
 				return FALSE;
 			}
 		}
@@ -118,87 +114,89 @@ int LogReport(const char *sFormat, ...) {
 	return v2;
 }
 
-//Phase this out for now - Hydromorph
-//void* InitUnhandledExceptionFilter() {
-//
-//	LPTOP_LEVEL_EXCEPTION_FILTER Handler = [] (LPEXCEPTION_POINTERS pExceptionInfo) -> LONG 
+LONG WINAPI DumpUnhandledException(LPEXCEPTION_POINTERS pExceptionInfo) {
+	LogReport("==== DumpUnhandledException ==============================\r\n");
+
+	auto v6 = pExceptionInfo->ExceptionRecord;
+	LogReport("Fault Address : %08X\r\n", v6->ExceptionAddress);
+	LogReport("Exception code: %08X\r\n", v6->ExceptionCode);
+
+	auto v8 = pExceptionInfo->ContextRecord;
+	LogReport("Registers:\r\n");
+	LogReport(
+		"EAX:%08X\r\nEBX:%08X\r\nECX:%08X\r\nEDX:%08X\r\nESI:%08X\r\nEDI:%08X\r\n",
+		v8->Eax, v8->Ebx, v8->Ecx,
+		v8->Edx, v8->Esi, v8->Edi);
+	LogReport("CS:EIP:%04X:%08X\r\n", v8->SegCs, v8->Eip);
+	LogReport("SS:ESP:%04X:%08X  EBP:%08X\r\n", v8->SegSs, v8->Esp, v8->Ebp);
+	LogReport("DS:%04X  ES:%04X  FS:%04X  GS:%04X\r\n", v8->SegDs, v8->SegEs, v8->SegFs, v8->SegGs);
+	LogReport("Flags:%08X\r\n", v8->EFlags);
+
+	LogReport("\r\n");
+
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+
+void InitUnhandledExceptionFilter() {
+	SetUnhandledExceptionFilter(DumpUnhandledException);
+}
+
+/* TODO: Confirm this works for MS2 (ZException object?) - Hydromoph */
+//void* InitVectoredExceptionHandler() {
+//	typedef const struct
 //	{
-//		LogReport("==== DumpUnhandledException ==============================\r\n");
+//		unsigned int magic;
+//		void* object;
+//		_ThrowInfo* info;
+//	} CxxThrowExceptionObject;
 //
-//		auto v6 = pExceptionInfo->ExceptionRecord;
-//		LogReport("Fault Address : %08X\r\n", v6->ExceptionAddress);
-//		LogReport("Exception code: %08X\r\n", v6->ExceptionCode);
+//	typedef struct ZException
+//	{
+//		HRESULT m_hr;
+//	} ZException;
 //
-//		auto v8 = pExceptionInfo->ContextRecord;
-//		LogReport("Registers:\r\n");
-//		LogReport(
-//			"EAX:%08X\r\nEBX:%08X\r\nECX:%08X\r\nEDX:%08X\r\nESI:%08X\r\nEDI:%08X\r\n",
-//			v8->Eax, v8->Ebx, v8->Ecx,
-//			v8->Edx, v8->Esi, v8->Edi);
-//		LogReport("CS:EIP:%04X:%08X\r\n", v8->SegCs, v8->Eip);
-//		LogReport("SS:ESP:%04X:%08X  EBP:%08X\r\n", v8->SegSs, v8->Esp, v8->Ebp);
-//		LogReport("DS:%04X  ES:%04X  FS:%04X  GS:%04X\r\n", v8->SegDs, v8->SegEs, v8->SegFs, v8->SegGs);
-//		LogReport("Flags:%08X\r\n", v8->EFlags);
+//	PVECTORED_EXCEPTION_HANDLER Handler = [](EXCEPTION_POINTERS* pExceptionInfo) -> long
+//	{
+//		if (pExceptionInfo->ExceptionRecord->ExceptionCode == 0xE06D7363) // C++ Exceptions
+//		{
+//			CxxThrowExceptionObject* exception_object = reinterpret_cast<CxxThrowExceptionObject*>(pExceptionInfo->ExceptionRecord->ExceptionInformation);
 //
-//		LogReport("\r\n");
+//			if (exception_object->magic == 0x19930520 && exception_object->info->pCatchableTypeArray->nCatchableTypes > 0)
+//			{
+//				typedef struct ZException
+//				{
+//					HRESULT m_hr;
+//				} ZException;
 //
-//		return EXCEPTION_EXECUTE_HANDLER;
+//				ZException* exc = reinterpret_cast<ZException*>(exception_object->object);
+//				printf("CMSException: %s - %08X\n", exception_object->info->pCatchableTypeArray->arrayOfCatchableTypes[0]->pType->name, exc->m_hr);
+//			}
+//		}
+//		else if (pExceptionInfo->ExceptionRecord->ExceptionCode != STATUS_PRIVILEGED_INSTRUCTION && pExceptionInfo->ExceptionRecord->ExceptionCode != DBG_PRINTEXCEPTION_C)
+//		{
+//			if (pExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_HEAP_CORRUPTION || pExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
+//			{
+//				if (pExceptionInfo->ExceptionRecord->ExceptionAddress != 0)
+//				{
+//					printf("RegException: %08X (%08X)\n", pExceptionInfo->ExceptionRecord->ExceptionCode, pExceptionInfo->ExceptionRecord->ExceptionAddress);
+//
+//					FILE* ff = fopen("C:\\exc.txt", "a+");
+//
+//					for (int i = 0; i < 0x400; i += 4)
+//						fprintf(ff, "Esp+%02X = %08X\n", i, *(DWORD*)(pExceptionInfo->ContextRecord->Esp + i));
+//
+//					fclose(ff);
+//				}
+//			}
+//			else
+//				printf("RegException: %08X (%08X)\n", pExceptionInfo->ExceptionRecord->ExceptionCode, pExceptionInfo->ExceptionRecord->ExceptionAddress);
+//		}
+//
+//		return EXCEPTION_CONTINUE_SEARCH;
 //	};
 //
-//	return SetUnhandledExceptionFilter(Handler);
+//	return AddVectoredExceptionHandler(1, Handler);
 //}
-
-//Thanks Benny
-void* InitVectoredExceptionHandler() {
-	typedef const struct
-	{
-		unsigned int magic;
-		void* object;
-		_ThrowInfo* info;
-	} CxxThrowExceptionObject;
-
-	PVECTORED_EXCEPTION_HANDLER Handler = [](EXCEPTION_POINTERS* pExceptionInfo) -> long
-	{
-		if (pExceptionInfo->ExceptionRecord->ExceptionCode == 0xE06D7363) // C++ Exceptions
-		{
-			CxxThrowExceptionObject* exception_object = reinterpret_cast<CxxThrowExceptionObject*>(pExceptionInfo->ExceptionRecord->ExceptionInformation);
-
-			if (exception_object->magic == 0x19930520 && exception_object->info->pCatchableTypeArray->nCatchableTypes > 0)
-			{
-				printf("CMSException: %s\n", exception_object->info->pCatchableTypeArray->arrayOfCatchableTypes[0]->pType->name);
-
-				//TODO: Figure out MS2 Exception Object
-				//ZException* exc = reinterpret_cast<ZException*>(exception_object->object);
-				//printf("CMSException: %s - %08X\n", exception_object->info->pCatchableTypeArray->arrayOfCatchableTypes[0]->pType->name, exc->m_hr);
-			}
-		}
-		else if (pExceptionInfo->ExceptionRecord->ExceptionCode != STATUS_PRIVILEGED_INSTRUCTION && pExceptionInfo->ExceptionRecord->ExceptionCode != DBG_PRINTEXCEPTION_C)
-		{
-			if (pExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_HEAP_CORRUPTION || pExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
-			{
-				if (pExceptionInfo->ExceptionRecord->ExceptionAddress != 0)
-				{
-					printf("RegException: %08X (%08X)\n", pExceptionInfo->ExceptionRecord->ExceptionCode, pExceptionInfo->ExceptionRecord->ExceptionAddress);
-
-					//FILE* ff = fopen("C:\\exc.txt", "a+");
-
-					//for (int i = 0; i < 0x400; i += 4)
-					//	fprintf(ff, "Esp+%02X = %08X\n", i, *(DWORD*)(pExceptionInfo->ContextRecord->Esp + i));
-
-					//fclose(ff);
-				}
-			}
-			else 
-			{
-				printf("RegException: %08X (%08X)\n", pExceptionInfo->ExceptionRecord->ExceptionCode, pExceptionInfo->ExceptionRecord->ExceptionAddress);
-			}
-		}
-
-		return EXCEPTION_CONTINUE_SEARCH;
-	};
-
-	return AddVectoredExceptionHandler(1, Handler);
-}
 
 /* A defaulted MessageBox */
 void NotifyMessage(const char* sText) {
