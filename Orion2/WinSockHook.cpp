@@ -4,10 +4,15 @@
 * @author Benny
 * @author Dan
 * @author Eric
+* @author Rajan
 *
 */
+
+#include "AddrQueue.h"
 #include "WinSockHook.h"
 #include "NMCOHook.h"
+
+//TODO: When the time comes, Push migrations to AddrQueue
 
 /* WSPConnect */
 static LPWSPCONNECT _WSPConnect = NULL;
@@ -28,29 +33,45 @@ int WINAPI WSPConnect_Hook(SOCKET s, sockaddr* name, int namelen, LPWSABUF lpCal
 	DWORD dwStringLength = 50;
 	WSAAddressToStringA(name, namelen, NULL, pBuff, &dwStringLength);
 
-	sockaddr_in* addr = reinterpret_cast<sockaddr_in*>(name);
-	unsigned short pPort = addr->sin_port;
+	auto bPatch = strstr(pBuff, NEXON_IP_NA) || strstr(pBuff, NEXON_IP_SA) || strstr(pBuff, NEXON_IP_EU);
 
 	VM_START
-		if (strstr(pBuff, NEXON_IP_NA) || strstr(pBuff, NEXON_IP_SA) || strstr(pBuff, NEXON_IP_EU)) {
-			/* Initialize the re-reoute socket address to redirect to */
-			dwRouteAddress = inet_addr(CLIENT_IP);
 
-#if DEBUG_MODE
-			printf("[WSPConnect_Hook] Patching to new address: %s\n", CLIENT_IP);
-#endif
+		/* Initialize the re-reoute socket address to redirect to */
+		if (bPatch) {
+			auto pAddr = reinterpret_cast<sockaddr_in*>(name);
+			
+			DWORD dwAddr = pAddr->sin_addr.S_un.S_addr;
+			SHORT nPort = pAddr->sin_port;
 
+			/* Nothing in queue? Default to Login Server*/
+			if (AddrQueue::Empty())
+			{
+				dwAddr = inet_addr(CLIENT_IP);
+				//nPort = CLIENT_PORT;
+			}
+			else
+			{
+				auto head = AddrQueue::Front();
+
+				dwAddr = head.dwAddr;
+				nPort = head.nPort;
+
+				AddrQueue::Pop();
+			}
+			
 			/* Copy the original host address and back it up */
-			memcpy(&dwHostAddress, &addr->sin_addr, sizeof(DWORD));
+			dwRouteAddress = dwAddr;
+
 			/* Update the host address to the route address */
-			memcpy(&addr->sin_addr, &dwRouteAddress, sizeof(DWORD));
+			pAddr->sin_addr.S_un.S_addr = dwAddr;
+			pAddr->sin_port = nPort;
 		}
-		else
-		{
+
 #if DEBUG_MODE
-			printf("[WSPConnect_Hook] Connecting to socket address: %s\n", pBuff);
+			printf("[WSPConnect_Hook] Connecting to socket: %s | Patched %d\n", pBuff, bPatch);
 #endif
-		}
+		
 	VM_END
 		return _WSPConnect(s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, lpErrno);
 }
@@ -60,12 +81,12 @@ int WINAPI WSPGetPeerName_Hook(SOCKET s, sockaddr* name, LPINT namelen, LPINT lp
 	int nResult = _WSPGetPeerName(s, name, namelen, lpErrno);
 
 	if (nResult == 0) {
-		sockaddr_in* addr = reinterpret_cast<sockaddr_in*>(name);
+		auto pAddr = reinterpret_cast<sockaddr_in*>(name);
 
 		/* Check if the returned address is the routed address */
-		if (addr->sin_addr.S_un.S_addr == dwRouteAddress) {
+		if (pAddr->sin_addr.S_un.S_addr == dwRouteAddress) {
 			/* Return the socket address back to the host address */
-			memcpy(&addr->sin_addr, &dwHostAddress, sizeof(DWORD));
+			pAddr->sin_addr.S_un.S_addr = dwHostAddress;
 		}
 	}
 

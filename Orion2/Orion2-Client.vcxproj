@@ -157,6 +157,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AddrQueue.h" />
     <ClInclude Include="APIDummy.h" />
     <ClInclude Include="detours.h" />
     <ClInclude Include="NMCOHook.h" />
@@ -173,9 +174,11 @@
     <ClInclude Include="Themida\SecureEngineCustomVMs_LCC_inline.h" />
     <ClInclude Include="Themida\SecureEngineCustomVMs_VC_inline.h" />
     <ClInclude Include="Themida\ThemidaSDK.h" />
+    <ClInclude Include="Types.h" />
     <ClInclude Include="WinSockHook.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AddrQueue.cpp" />
     <ClCompile Include="APIDummy.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="NMCOHook.cpp" />

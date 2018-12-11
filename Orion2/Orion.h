@@ -70,8 +70,7 @@ bool Hook_GetCurrentDirectoryA(bool);
 bool Hook_CreateMutexA(bool);
 bool RedirectProcess();
 
-void InitUnhandledExceptionFilter();
-//void* InitVectoredExceptionHandler();
+void* InitUnhandledExceptionFilter();
 
 /* MessageBox debugging */
 void NotifyMessage(const char*);
