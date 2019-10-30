@@ -17,8 +17,7 @@ bool Hook_CreateWindowExA(bool bEnable) {
 	decltype(&CreateWindowExA) CreateWindowExA_Hook = [](DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam) -> HWND {
 
 		if (strstr(lpClassName, CLIENT_CLASS)) {
-			//NotifyMessage("Orion2 has loaded all data successfully!\r\n\r\nPress OK to launch the game~", Orion::NotifyType::Information);
-			lpWindowName = CLIENT_CLASS;
+			lpWindowName = CLIENT_NAME;
 		}
 
 		return _CreateWindowExA(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
@@ -68,28 +67,26 @@ bool Hook_GetCurrentDirectoryA(bool bEnable) {
 }
 
 bool RedirectProcess() {
-	//"C:\Nexon\Library\maplestory2\appdata\MapleStory2.exe" "127.0.0.1" 20001 --nxapp=nxl --lc=en-US
+	//"C:\Nexon\Library\maplestory2\appdata\x64\MapleStory2.exe" 127.0.0.1 30000 -ip -port --nxapp=nxl --lc=EN
 	LPTSTR sCmd = GetCommandLine();
 
 	if (!strstr(sCmd, "nxapp")) {
-		char sFileName[MAX_PATH];
-		std::string strFileName = std::string(sFileName, GetModuleFileName(NULL, sFileName, MAX_PATH));
-		std::string strCmd = std::string(sCmd);
-		strCmd += " \"127.0.0.1\"";//IP
-		strCmd += " 20001";//Port
-		strCmd += " --nxapp=nxl";
-		strCmd += " --lc=en-US";//Locale
+		char strFileName[MAX_PATH];
+		char strCmd[MAX_BUFFER];
+		GetModuleFileName(NULL, strFileName, MAX_PATH);
+		strcpy(strCmd, sCmd);
 
-		LPSTR lpProgramPath = _tcsdup(&strFileName[0]);
-		LPSTR lpCommandLine = _tcsdup(TEXT(&strCmd[0]));
+		char sArgs[SCHAR_MAX];
+		sprintf(sArgs, "%s %d -ip -port --nxapp=nxl --lc=%s", CLIENT_IP, CLIENT_PORT, CLIENT_LOCALE);
+		strcat(strCmd, sArgs);
 
 		PROCESS_INFORMATION p_info;
 		STARTUPINFO s_info;
 		memset(&s_info, 0, sizeof(s_info));
 		memset(&p_info, 0, sizeof(p_info));
 		s_info.cb = sizeof(s_info);
-		if (CreateProcess(lpProgramPath, lpCommandLine, NULL, NULL, 0, 0, NULL, NULL, &s_info, &p_info)) {
-			Sleep(2000);//Open in current window handle
+		if (CreateProcess(strFileName, strCmd, NULL, NULL, 0, 0, NULL, NULL, &s_info, &p_info)) {
+			Sleep(100);//Open in current window handle
 			exit(0);//Exit this process so it doesn't redirect
 			WaitForSingleObject(p_info.hProcess, INFINITE);
 			CloseHandle(p_info.hProcess);
@@ -101,19 +98,22 @@ bool RedirectProcess() {
 	return true;
 }
 
-int LogReport(const char *sFormat, ...) {
-	CHAR sBuff[4096] = { 0 };
-	va_list arglist;
-
-	va_start(arglist, sFormat);
-
-	int v2 = wvsprintfA((LPSTR)(&sBuff), sFormat, arglist);
-
-	OutputDebugStringA(sBuff);
-
-	va_end(arglist);
-
-	return v2;
+/* Orion's console logging function used in debug-mode only */
+void Log(const char* sFormat, ...) {
+#if DEBUG_MODE
+	// Construct a formatted string buffer
+	char* sText = new char[MAX_BUFFER];
+	va_list aArgs;
+	va_start(aArgs, sFormat);
+	vsnprintf(sText, MAX_BUFFER - 1, sFormat, aArgs);
+	// Concat a new line since we're printf-ing
+	strcat(sText, "\n");
+	// Print the formatted string to console
+	printf(sText);
+	// Cleanup memory
+	va_end(aArgs);
+	delete[] sText;
+#endif
 }
 
 //Phase this out for now - Hydromorph
@@ -163,8 +163,8 @@ void* InitVectoredExceptionHandler() {
 
 			if (exception_object->magic == 0x19930520 && exception_object->info->pCatchableTypeArray->nCatchableTypes > 0)
 			{
-				printf("CMSException: %s\n", exception_object->info->pCatchableTypeArray->arrayOfCatchableTypes[0]->pType->name);
-
+				Log("CMSException: %s", exception_object->info->pCatchableTypeArray->arrayOfCatchableTypes[0]->pType->name);
+				
 				//TODO: Figure out MS2 Exception Object
 				//ZException* exc = reinterpret_cast<ZException*>(exception_object->object);
 				//printf("CMSException: %s - %08X\n", exception_object->info->pCatchableTypeArray->arrayOfCatchableTypes[0]->pType->name, exc->m_hr);
@@ -176,7 +176,7 @@ void* InitVectoredExceptionHandler() {
 			{
 				if (pExceptionInfo->ExceptionRecord->ExceptionAddress != 0)
 				{
-					printf("RegException: %08X (%08X)\n", pExceptionInfo->ExceptionRecord->ExceptionCode, pExceptionInfo->ExceptionRecord->ExceptionAddress);
+					Log("RegException: %08X (%08X)", pExceptionInfo->ExceptionRecord->ExceptionCode, pExceptionInfo->ExceptionRecord->ExceptionAddress);
 
 					//FILE* ff = fopen("C:\\exc.txt", "a+");
 
@@ -188,7 +188,7 @@ void* InitVectoredExceptionHandler() {
 			}
 			else
 			{
-				printf("RegException: %08X (%08X)\n", pExceptionInfo->ExceptionRecord->ExceptionCode, pExceptionInfo->ExceptionRecord->ExceptionAddress);
+				Log("RegException: %08X (%08X)", pExceptionInfo->ExceptionRecord->ExceptionCode, pExceptionInfo->ExceptionRecord->ExceptionAddress);
 			}
 		}
 

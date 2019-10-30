@@ -29,16 +29,14 @@ int WINAPI WSPConnect_Hook(SOCKET s, sockaddr* name, int namelen, LPWSABUF lpCal
 	WSAAddressToStringA(name, namelen, NULL, pBuff, &dwStringLength);
 
 	sockaddr_in* addr = reinterpret_cast<sockaddr_in*>(name);
-	unsigned short pPort = addr->sin_port;
+	unsigned short pPort = htons(addr->sin_port);
+	Log("[WSPCOnnect_Hook] Address: %s => Port: %d", pBuff, pPort);
 
 	VM_START
 		if (strstr(pBuff, NEXON_IP_NA) || strstr(pBuff, NEXON_IP_SA) || strstr(pBuff, NEXON_IP_EU)) {
 			/* Initialize the re-reoute socket address to redirect to */
 			dwRouteAddress = inet_addr(CLIENT_IP);
-
-#if DEBUG_MODE
-			printf("[WSPConnect_Hook] Patching to new address: %s\n", CLIENT_IP);
-#endif
+			Log("[WSPConnect_Hook] Patching to new address: %s", CLIENT_IP);
 
 			/* Copy the original host address and back it up */
 			memcpy(&dwHostAddress, &addr->sin_addr, sizeof(DWORD));
@@ -47,9 +45,7 @@ int WINAPI WSPConnect_Hook(SOCKET s, sockaddr* name, int namelen, LPWSABUF lpCal
 		}
 		else
 		{
-#if DEBUG_MODE
-			printf("[WSPConnect_Hook] Connecting to socket address: %s\n", pBuff);
-#endif
+			Log("[WSPConnect_Hook] Connecting to socket address: %s", pBuff);
 		}
 	VM_END
 		return _WSPConnect(s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, lpErrno);
