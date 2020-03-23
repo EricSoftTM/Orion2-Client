@@ -73,11 +73,11 @@ DWORD FindAoB(const char* sAoB, DWORD dwStartAddress, DWORD dwEndAddress, int nS
 	int nSkipped = 0;
 
 	if (uSize > 0) {
-		dwStartAddress = dwStartAddress ? dwStartAddress : 0x00400000;
-		dwEndAddress = dwEndAddress ? dwEndAddress : 0x07FFFFFF;
+		dwStartAddress = dwStartAddress ? dwStartAddress : PE_START;
+		dwEndAddress = dwEndAddress ? dwEndAddress : PE_END;
 
 		__try {
-			for (i = dwStartAddress; i < dwEndAddress; i++) {
+			for (i = dwStartAddress; i < (dwEndAddress - uSize); i++) {
 				for (j = 0; j < uSize; j++) {
 					if (aMask[j]) {
 						continue;
@@ -95,7 +95,6 @@ DWORD FindAoB(const char* sAoB, DWORD dwStartAddress, DWORD dwEndAddress, int nS
 			}
 		}
 		__except (EXCEPTION_EXECUTE_HANDLER) {
-			return 0;
 		}
 	}
 

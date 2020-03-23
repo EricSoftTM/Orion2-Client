@@ -37,14 +37,15 @@
 /* Client hacks/customization constants */
 #define CHAT_SPAM		FALSE /* Enable chat spam */
 #define CHAT_LENGTH		127 /* Custom chat text length */
-#define SWEAR_FILTER	TRUE /* Enable swear filter */
+#define SWEAR_FILTER	FALSE /* Enable swear filter */
 #define MULTI_CLIENT	TRUE /* Enable multi-client */
 #define DISABLE_NXL		TRUE /* Universally disables all NXL functionality (enables LoginUI for user/pass) */
 
 /* Other constants */
-#define STRING_LOCALE	"ko-KR" /* The application's locale (korean: ko-KR, english: en-US, chinese: zh-CN) */
+#define STRING_LOCALE	"en-US" /* The application's locale (korean: ko-KR, english: en-US, chinese: zh-CN) */
 #define MAX_BUFFER		1024 /* Maximum buffer size used for various arrays */
-#define PE_START		0x401000 /* The standard PE start address */
+#define PE_START		0x00401000 /* The standard PE start address */
+#define PE_END			0x04FFFFFF /* The scan range of the PE */
 #define NEXON_IP_NA		"23.98.21" /* Nexon's North America IP pattern to search for upon hook */
 #define NEXON_IP_SA		"52.171.48" /* Nexon's South America IP pattern to search for upon hook */
 #define NEXON_IP_EU		"13.65.17" /* Nexon's Europe IP pattern to search for upon hook */
