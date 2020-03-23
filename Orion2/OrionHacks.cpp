@@ -94,8 +94,7 @@ DWORD FindAoB(const char* sAoB, DWORD dwStartAddress, DWORD dwEndAddress, int nS
 					}
 				}
 				if (j == uSize) {
-					nSkipped++;
-					if (nSkipped >= nSkip) {
+					if (nSkipped++ >= nSkip) {
 						return i;
 					}
 				}
