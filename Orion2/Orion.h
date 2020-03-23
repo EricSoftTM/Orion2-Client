@@ -40,6 +40,7 @@
 #define SWEAR_FILTER	FALSE /* Enable swear filter */
 #define MULTI_CLIENT	TRUE /* Enable multi-client */
 #define DISABLE_NXL		TRUE /* Universally disables all NXL functionality (enables LoginUI for user/pass) */
+#define BYPASS_NGS		TRUE /* Strips out NGS from the client */
 
 /* Other constants */
 #define STRING_LOCALE	"en-US" /* The application's locale (korean: ko-KR, english: en-US, chinese: zh-CN) */

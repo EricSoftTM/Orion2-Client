@@ -20,6 +20,13 @@ bool InitializeOrion2() {
 	// Then, from v9~v70 (much higher, not sure where it ended), the client used 1 skip.
 	// As of current GMS2 , the client is once again using 2 skips.
 
+	DWORD dwBypassNGS = FindAoB("8D 45 F4 64 A3 00 00 00 00 6A 01", 0, 0, 1) - 0x1C;//Confirmed v24~final
+	if (BYPASS_NGS) {
+		/* Bypass Nexon Game Security initialization. */
+		WriteAoB(dwBypassNGS, "33 C0 C3");
+		Log("Successfully bypassed NGS at address %08X", dwBypassNGS);
+	}
+
 	bool bInit = true;
 	if (DISABLE_NXL) {
 		bInit &= (dwDisableNXL > PE_START);
