@@ -14,11 +14,8 @@ bool InitializeOrion2() {
 	DWORD dwSwearFilter = FindAoB("83 CF FF 8D 4D EC 89 7D FC FF 15 ?? ?? ?? 01 68 ?? ?? ?? 01 8D 4D EC FF 15 ?? ?? ?? 01 8D 4E 5C", 0, 0, 0) + 0x3D;//Confirmed v24~v55 (v9 is +0x33)
 	DWORD dwNXLBypass1 = FindAoB("E8 ?? ?? ?? FF ?? ?? ?? ?? ?? ?? ?? 00 ?? ?? ?? ?? ?? ?? ?? 8B ?? 8B 42 ?? FF D0 ?? ?? ?? ?? ?? ?? ??", 0, 0, 0);//Confirmed v1~v55
 	DWORD dwNXLBypass2 = FindAoB("83 C4 04 85 C0 74 08 33 C0 5F 5E 8B E5 5D C3 E8 ?? ?? ?? FF 85 C0 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ??", 0, 0, 0) + 0xF;//Confirmed v1~v55
-	DWORD dwDisableNXL = FindAoB("B8 01 00 00 00 C3 CC CC CC CC CC CC CC CC CC CC 55 8B EC 6A FF 68 ?? ?? ?? 01 64 A1 00 00 00 00", 0, 0, 2);//v1 & current: 2 skips, v9~v70: 1 skip
-	// If dwDisableNXL does NOT enable LoginUI for user/pass, change the skips around from 1 and 2.
-	// On the original GMST2 clients (as well as KMST2), the client used 2 skips. 
-	// Then, from v9~v70 (much higher, not sure where it ended), the client used 1 skip.
-	// As of current GMS2 , the client is once again using 2 skips.
+	DWORD dwDisableNXL = FindAoB("B8 01 00 00 00 C3 CC CC CC CC CC CC CC CC CC CC 55 8B EC 6A FF 68 ?? ?? ?? 01 64 A1 00 00 00 00", 0, 0, 1);//Confirmed v1 & v100~final
+	// When DisableNXL fails: if you're using an older version client (e.g CBT), change the skip count to 0.
 
 	DWORD dwBypassNGS = FindAoB("8D 45 F4 64 A3 00 00 00 00 6A 01", 0, 0, 1) - 0x1C;//Confirmed v24~final
 	if (BYPASS_NGS) {
@@ -27,20 +24,24 @@ bool InitializeOrion2() {
 		Log("Successfully bypassed NGS at address %08X", dwBypassNGS);
 	}
 
-	bool bInit = true;
+	bool bInit = false;
 	if (DISABLE_NXL) {
-		bInit &= (dwDisableNXL > PE_START);
-		if (bInit) {
+		if (dwDisableNXL > PE_START) {
+			bInit = true;
+			/* Globally bypass Nexon Launcher checks */
 			WriteAoB(dwDisableNXL, "B8 00 00 00 00");
+			Log("Successfully disabled NXL at address %08X", dwDisableNXL);
 		}
 	} else {
-		bInit &= (dwNXLBypass1 > PE_START) && (dwNXLBypass2 > PE_START);
-		if (bInit) {
+		if (dwNXLBypass1 > PE_START && dwNXLBypass2 > PE_START) {
+			bInit = true;
 			/* Bypass Nexon Launcher Server Checks */
 			WriteAoB(dwNXLBypass1, "B8 00 00 00 00");
+			Log("Successfully bypassed NXL at address %08X", dwNXLBypass1);
 
 			/* Bypass Nexon Launcher IP Checks */
 			WriteAoB(dwNXLBypass2, "B8 00 00 00 00");
+			Log("Successfully bypassed NXL at address %08X", dwNXLBypass2);
 		}
 	}
 
@@ -56,6 +57,7 @@ bool InitializeOrion2() {
 		if (SWEAR_FILTER) {
 			/* Bypasses the "banWord" checks to allow cursing. */
 			WriteAoB(dwSwearFilter, "90 90 90 90 90");
+			Log("Successfully bypassed Swear Filter at address %08X", dwSwearFilter);
 		}
 	}
 	
