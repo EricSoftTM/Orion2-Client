@@ -7,9 +7,6 @@
 #include "Orion.h"
 #include "OrionHacks.h"
 
-/* Initializing Memory Alterations */
-BOOL bInitialized = FALSE;
-
 /* CreateWindowExA hook used to rename the main window */
 bool Hook_CreateWindowExA(bool bEnable) {
 	static decltype(&CreateWindowExA) _CreateWindowExA = &CreateWindowExA;
@@ -30,40 +27,34 @@ bool Hook_CreateMutexA(bool bEnable) {
 	static decltype(&CreateMutexA) _CreateMutexA = &CreateMutexA;
 
 	decltype(&CreateMutexA) CreateMutexA_Hook = [](LPSECURITY_ATTRIBUTES lpMutexAttributes, BOOL bInitialOwner, LPCSTR lpName) -> HANDLE {
-		if (lpName && !lstrcmpiA(lpName, MUTLI_MUTEX)) {
-			HANDLE hHandle = _CreateMutexA(lpMutexAttributes, bInitialOwner, lpName);
+		if (lpName) {
+			/* Universal CGameApp::InitInstance injection */
+			if (!lstrcmpiA(lpName, MUTLI_MUTEX)) {
+				// Initialize all memory alterations
+				bool bInit = InitializeOrion2();
+				if (bInit) {
+					Log("Successfully initialized Orion2!");
+				}
+				else {
+					Log("Failed to initialize Orion2.");
+				}
 
-			if (hHandle) {
-				HANDLE hMaple;
-				DuplicateHandle(GetCurrentProcess(), hHandle, 0, &hMaple, 0, FALSE, DUPLICATE_CLOSE_SOURCE);
-				CloseHandle(hMaple);
+				if (MULTI_CLIENT) {
+					HANDLE hHandle = _CreateMutexA(lpMutexAttributes, bInitialOwner, lpName);
+
+					if (hHandle) {
+						HANDLE hMaple;
+						DuplicateHandle(GetCurrentProcess(), hHandle, 0, &hMaple, 0, FALSE, DUPLICATE_CLOSE_SOURCE);
+						CloseHandle(hMaple);
+					}
+					return hHandle;
+				}
 			}
-			return hHandle;
 		}
 		return _CreateMutexA(lpMutexAttributes, bInitialOwner, lpName);
 	};
 
 	return SetHook(bEnable, reinterpret_cast<void**>(&_CreateMutexA), CreateMutexA_Hook);
-}
-
-/* Best way to inject into client memory after class load: hook GetCurrentDirectoryA(). */
-bool Hook_GetCurrentDirectoryA(bool bEnable) {
-	static decltype(&GetCurrentDirectoryA) _GetCurrentDirectoryA = &GetCurrentDirectoryA;
-
-	decltype(&GetCurrentDirectoryA) GetCurrentDirectoryA_Hook = [](DWORD nBufferLength, LPSTR lpBuffer) -> DWORD {
-		/* Only initialize the memory alterations once.. */
-		if (!bInitialized) {
-			if (InitializeOrion2()) {
-				bInitialized = TRUE;
-			} else {
-				return FALSE;
-			}
-		}
-
-		return _GetCurrentDirectoryA(nBufferLength, lpBuffer);
-	};
-
-	return SetHook(bEnable, reinterpret_cast<void**>(&_GetCurrentDirectoryA), GetCurrentDirectoryA_Hook);
 }
 
 bool RedirectProcess() {

@@ -32,7 +32,7 @@
 #define CLIENT_IP		"127.0.0.1" /* The server IP to reroute to */
 #define CLIENT_PORT		20001 /* The server Port to connect to (Orion2: 20001, GMS2: 30000) */
 #define CLIENT_LOCALE	"EN" /* The client's locale (used to be en-US, now it's EN) */
-#define DEBUG_MODE		1 /* 0 = No Logging, 1 = General Logging, 2 = Enable everything */
+#define DEBUG_MODE		TRUE /* Toggle debug mode */
 
 /* Client hacks/customization constants */
 #define CHAT_SPAM		FALSE /* Enable chat spam */
@@ -67,7 +67,6 @@ BOOL SetHook(__in BOOL bInstall, __inout PVOID* ppvTarget, __in PVOID pvDetour);
 
 /* Win32 hooks */
 bool Hook_CreateWindowExA(bool);
-bool Hook_GetCurrentDirectoryA(bool);
 bool Hook_CreateMutexA(bool);
 bool RedirectProcess();
 
