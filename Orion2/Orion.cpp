@@ -148,48 +148,61 @@ void Log(const char* sFormat, ...) {
 
 //Thanks Benny
 void* InitVectoredExceptionHandler() {
-	typedef const struct
-	{
-		unsigned int magic;
-		void* object;
-		_ThrowInfo* info;
+	// struct EHExceptionRecord::EHParameters
+	typedef const struct {
+		unsigned int magicNumber;
+		void* pExceptionObject;
+		_s__ThrowInfo* pThrowInfo;
 	} CxxThrowExceptionObject;
 
-	PVECTORED_EXCEPTION_HANDLER Handler = [](EXCEPTION_POINTERS* pExceptionInfo) -> long
-	{
-		if (pExceptionInfo->ExceptionRecord->ExceptionCode == 0xE06D7363) // C++ Exceptions
-		{
-			CxxThrowExceptionObject* exception_object = reinterpret_cast<CxxThrowExceptionObject*>(pExceptionInfo->ExceptionRecord->ExceptionInformation);
+	// ehdata.h
+	static const DWORD EH_EXCEPTION_NUMBER		= ('msc' | 0xE0000000);
+	static const DWORD EH_MAGIC_NUMBER_1		= 0x19930520;
+	static const DWORD EH_EXCEPTION_PARAMETERS	= 3;
+	static const DWORD MS_VC_EXCEPTION			= 0x406D1388;
 
-			if (exception_object->magic == 0x19930520 && exception_object->info->pCatchableTypeArray->nCatchableTypes > 0)
-			{
-				Log("CMSException: %s", exception_object->info->pCatchableTypeArray->arrayOfCatchableTypes[0]->pType->name);
-				
-				//TODO: Figure out MS2 Exception Object
-				//ZException* exc = reinterpret_cast<ZException*>(exception_object->object);
-				//printf("CMSException: %s - %08X\n", exception_object->info->pCatchableTypeArray->arrayOfCatchableTypes[0]->pType->name, exc->m_hr);
-			}
-		}
-		else if (pExceptionInfo->ExceptionRecord->ExceptionCode != STATUS_PRIVILEGED_INSTRUCTION && pExceptionInfo->ExceptionRecord->ExceptionCode != DBG_PRINTEXCEPTION_C)
-		{
-			if (pExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_HEAP_CORRUPTION || pExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
-			{
-				if (pExceptionInfo->ExceptionRecord->ExceptionAddress != 0)
-				{
-					Log("RegException: %08X (%08X)", pExceptionInfo->ExceptionRecord->ExceptionCode, pExceptionInfo->ExceptionRecord->ExceptionAddress);
+	PVECTORED_EXCEPTION_HANDLER Handler = [](EXCEPTION_POINTERS* pExceptionInfo) -> LONG {
+		if (pExceptionInfo->ExceptionRecord->ExceptionCode == EH_EXCEPTION_NUMBER && pExceptionInfo->ExceptionRecord->NumberParameters == EH_EXCEPTION_PARAMETERS) { // C++ Exceptions
+			CxxThrowExceptionObject* pObj = reinterpret_cast<CxxThrowExceptionObject*>(pExceptionInfo->ExceptionRecord->ExceptionInformation);
 
-					//FILE* ff = fopen("C:\\exc.txt", "a+");
+			if (pObj->magicNumber == EH_MAGIC_NUMBER_1 && pObj->pThrowInfo->pCatchableTypeArray->nCatchableTypes > 0) {
+				auto szName = pObj->pThrowInfo->pCatchableTypeArray->arrayOfCatchableTypes[0]->pType->name;
 
-					//for (int i = 0; i < 0x400; i += 4)
-					//	fprintf(ff, "Esp+%02X = %08X\n", i, *(DWORD*)(pExceptionInfo->ContextRecord->Esp + i));
+				// TODO: MapleStory2 uses MFC and throws abstract CException objects. Handle these!
+				// CException objects have a GetErrorMessage() function which means we can log error messages.
 
-					//fclose(ff);
+				Log("Exception: %s", szName);
+
+				_CONTEXT* reg = pExceptionInfo->ContextRecord;
+				if (reg) {
+					Log("EAX=%X EBX=%X ECX=%X EDX=%X EDI=%X ESI=%X EBP=%X EIP=%X ESP=%X", reg->Eax, reg->Ebx, reg->Ecx, reg->Edx, reg->Edi, reg->Esi, reg->Ebp, reg->Eip, reg->Esp);
 				}
 			}
-			else
-			{
-				Log("RegException: %08X (%08X)", pExceptionInfo->ExceptionRecord->ExceptionCode, pExceptionInfo->ExceptionRecord->ExceptionAddress);
+		}
+		else if (pExceptionInfo->ExceptionRecord->ExceptionCode == MS_VC_EXCEPTION) { // C++ Thread Name Exception
+			if (pExceptionInfo->ExceptionRecord->ExceptionAddress != 0) {
+				Log("SetThreadName Exception Raised [%08X]", pExceptionInfo->ExceptionRecord->ExceptionAddress);
 			}
+		}
+		else if (pExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_HEAP_CORRUPTION) {
+			if (pExceptionInfo->ExceptionRecord->ExceptionAddress != 0) {
+				Log("CxxException [STATUS_HEAP_CORRUPTION]: %08X", pExceptionInfo->ExceptionRecord->ExceptionAddress);
+			}
+		}
+		else if (pExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) {
+			if (pExceptionInfo->ExceptionRecord->ExceptionAddress != 0) {
+				Log("CxxException [STATUS_ACCESS_VIOLATION]: %08X", pExceptionInfo->ExceptionRecord->ExceptionAddress);
+			}
+		}
+		else if (pExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) {
+			if (pExceptionInfo->ExceptionRecord->ExceptionAddress != 0) {
+				Log("CxxException [STATUS_BREAKPOINT]: %08X", pExceptionInfo->ExceptionRecord->ExceptionAddress);
+			}
+		}
+		else if (pExceptionInfo->ExceptionRecord->ExceptionCode != STATUS_PRIVILEGED_INSTRUCTION 
+			&& pExceptionInfo->ExceptionRecord->ExceptionCode != DBG_PRINTEXCEPTION_C
+			&& pExceptionInfo->ExceptionRecord->ExceptionCode != DBG_PRINTEXCEPTION_WIDE_C) {
+			Log("RegException: %08X (%08X)", pExceptionInfo->ExceptionRecord->ExceptionCode, pExceptionInfo->ExceptionRecord->ExceptionAddress);
 		}
 
 		return EXCEPTION_CONTINUE_SEARCH;
