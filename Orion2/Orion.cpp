@@ -68,16 +68,16 @@ bool Hook_GetCurrentDirectoryA(bool bEnable) {
 
 bool RedirectProcess() {
 	//"C:\Nexon\Library\maplestory2\appdata\x64\MapleStory2.exe" 127.0.0.1 30000 -ip -port --nxapp=nxl --lc=EN
-	LPTSTR sCmd = GetCommandLine();
+	LPSTR sCmd = GetCommandLine();
 
 	if (!strstr(sCmd, "nxapp")) {
 		char strFileName[MAX_PATH];
 		char strCmd[MAX_BUFFER];
 		GetModuleFileName(NULL, strFileName, MAX_PATH);
-		strcpy(strCmd, sCmd);
+		sprintf(strCmd, "\"%s\" ", strFileName);
 
 		char sArgs[SCHAR_MAX];
-		sprintf(sArgs, "%s %d -ip -port --nxapp=nxl --lc=%s", CLIENT_IP, CLIENT_PORT, CLIENT_LOCALE);
+		sprintf(sArgs, "%d --nxapp=nxl --lc=%s", CLIENT_PORT, CLIENT_LOCALE);
 		strcat(strCmd, sArgs);
 
 		PROCESS_INFORMATION p_info;
@@ -86,8 +86,8 @@ bool RedirectProcess() {
 		memset(&p_info, 0, sizeof(p_info));
 		s_info.cb = sizeof(s_info);
 		if (CreateProcess(strFileName, strCmd, NULL, NULL, 0, 0, NULL, NULL, &s_info, &p_info)) {
-			Sleep(100);//Open in current window handle
-			exit(0);//Exit this process so it doesn't redirect
+			Sleep(10);//Open in current window handle
+			exit(EXIT_SUCCESS);//Exit this process so it doesn't redirect
 			WaitForSingleObject(p_info.hProcess, INFINITE);
 			CloseHandle(p_info.hProcess);
 			CloseHandle(p_info.hThread);
