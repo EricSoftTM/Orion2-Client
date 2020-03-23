@@ -37,7 +37,7 @@
 /* Client hacks/customization constants */
 #define CHAT_SPAM		FALSE /* Enable chat spam */
 #define CHAT_LENGTH		127 /* Custom chat text length */
-#define SWEAR_FILTER	FALSE /* Enable swear filter */
+#define SWEAR_FILTER	TRUE /* Enable swear filter */
 #define MULTI_CLIENT	TRUE /* Enable multi-client */
 #define DISABLE_NXL		TRUE /* Universally disables all NXL functionality (enables LoginUI for user/pass) */
 #define BYPASS_NGS		TRUE /* Strips out NGS from the client */

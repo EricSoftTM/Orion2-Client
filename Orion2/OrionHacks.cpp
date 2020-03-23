@@ -11,7 +11,7 @@
 bool InitializeOrion2() {
 	VM_START
 
-	DWORD dwSwearFilter = FindAoB("83 CF FF 8D 4D EC 89 7D FC FF 15 ?? ?? ?? 01 68 ?? ?? ?? 01 8D 4D EC FF 15 ?? ?? ?? 01 8D 4E 5C", 0, 0, 0) + 0x3D;//Confirmed v24~v55 (v9 is +0x33)
+	DWORD dwSwearFilter = FindAoB("62 61 6E 57 6F 72 64 2E 78 6D 6C 00", 0, 0, 0);
 	DWORD dwNXLBypass1 = FindAoB("E8 ?? ?? ?? FF ?? ?? ?? ?? ?? ?? ?? 00 ?? ?? ?? ?? ?? ?? ?? 8B ?? 8B 42 ?? FF D0 ?? ?? ?? ?? ?? ?? ??", 0, 0, 0);//Confirmed v1~v55
 	DWORD dwNXLBypass2 = FindAoB("83 C4 04 85 C0 74 08 33 C0 5F 5E 8B E5 5D C3 E8 ?? ?? ?? FF 85 C0 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ??", 0, 0, 0) + 0xF;//Confirmed v1~v55
 	DWORD dwDisableNXL = FindAoB("B8 01 00 00 00 C3 CC CC CC CC CC CC CC CC CC CC 55 8B EC 6A FF 68 ?? ?? ?? 01 64 A1 00 00 00 00", 0, 0, 1);//Confirmed v1 & v100~final
@@ -56,7 +56,7 @@ bool InitializeOrion2() {
 
 		if (SWEAR_FILTER) {
 			/* Bypasses the "banWord" checks to allow cursing. */
-			WriteAoB(dwSwearFilter, "90 90 90 90 90");
+			WriteString(dwSwearFilter, "Orion2.xml");
 			Log("Successfully bypassed Swear Filter at address %08X", dwSwearFilter);
 		}
 	}
@@ -199,12 +199,16 @@ void WriteAoB(DWORD dwAddress, const char* sBytes) {
 
 /* Writes an unsigned byte to memory at the provided address */
 void WriteByte(DWORD dwAddress, unsigned char bData) {
-	*(unsigned char *)dwAddress = bData;
+	if (dwAddress > PE_START) {
+		*(unsigned char *)(dwAddress) = bData;
+	}
 }
 
 /* Writes an integer to memory at the provided address */
 void WriteInt(DWORD dwAddress, int nData) {
-	*(int *)dwAddress = nData;
+	if (dwAddress > PE_START) {
+		*(int *)(dwAddress) = nData;
+	}
 }
 
 /* Quick and simple way to write multiple empty bytes at a specific address and offset */
@@ -255,28 +259,7 @@ void WriteString(DWORD dwAddress, const char* sStr) {
 
 /* Writes an 8-byte double to memory at the address specified */
 void WriteDouble(DWORD dwAddress, double dValue) {
-	union {
-		long long liVal;
-		double    dVal;
-	} Result;
-
-	Result.dVal = dValue;
-
-	const unsigned int uSize = sizeof(double) * 2;//2 characters per byte
-	char pBuff[uSize + 1];
-	char pDest[uSize + sizeof(double)];
-
-	_snprintf(pBuff, sizeof(pBuff), "%016llx", Result.liVal);
-	pBuff[uSize] = '\0';
-
-	unsigned int uLen = uSize + sizeof(double);
-
-	pDest[--uLen] = '\0';
-	for (unsigned int i = 0; i < uSize; i += 2) {
-		pDest[--uLen] = pBuff[i + 1];
-		pDest[--uLen] = pBuff[i];
-		pDest[--uLen] = ' ';
+	if (dwAddress > PE_START) {
+		*(long double *)(dwAddress) = dValue;
 	}
-
-	WriteAoB(dwAddress, pDest);
 }
