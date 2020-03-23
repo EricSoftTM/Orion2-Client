@@ -12,6 +12,7 @@ bool InitializeOrion2() {
 	VM_START
 
 	DWORD dwSwearFilter = FindAoB("62 61 6E 57 6F 72 64 2E 78 6D 6C 00", 0, 0, 0);
+	DWORD dwSwearFilterAll = FindAoB("62 61 6E 57 6F 72 64 41 6C 6C 2E 78 6D 6C 00", 0, 0, 0);
 	DWORD dwNXLBypass1 = FindAoB("E8 ?? ?? ?? FF ?? ?? ?? ?? ?? ?? ?? 00 ?? ?? ?? ?? ?? ?? ?? 8B ?? 8B 42 ?? FF D0 ?? ?? ?? ?? ?? ?? ??", 0, 0, 0);//Confirmed v1~v55
 	DWORD dwNXLBypass2 = FindAoB("83 C4 04 85 C0 74 08 33 C0 5F 5E 8B E5 5D C3 E8 ?? ?? ?? FF 85 C0 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ??", 0, 0, 0) + 0xF;//Confirmed v1~v55
 	DWORD dwDisableNXL = FindAoB("B8 01 00 00 00 C3 CC CC CC CC CC CC CC CC CC CC 55 8B EC 6A FF 68 ?? ?? ?? 01 64 A1 00 00 00 00", 0, 0, 1);//Confirmed v1 & v100~final
@@ -55,9 +56,15 @@ bool InitializeOrion2() {
 		}
 
 		if (SWEAR_FILTER) {
-			/* Bypasses the "banWord" checks to allow cursing. */
-			WriteString(dwSwearFilter, "Orion2.xml");
-			Log("Successfully bypassed Swear Filter at address %08X", dwSwearFilter);
+			if (dwSwearFilter > PE_START && dwSwearFilterAll > PE_START) {
+				/* Bypasses the "banWord" checks to allow cursing. */
+				WriteString(dwSwearFilter, "Orion2.xml");
+				Log("Successfully bypassed Swear Filter at address %08X", dwSwearFilter);
+
+				/* Bypasses the "banWordAll" checks to allow cursing. */
+				WriteString(dwSwearFilterAll, "HelloWorld.xml");
+				Log("Successfully bypassed Swear Filter at address %08X", dwSwearFilterAll);
+			}
 		}
 	}
 	
