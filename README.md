@@ -12,7 +12,16 @@ In order to do this, we will need to modify the import table of a dependency and
  4) After selecting the DLL, exports will appear below. Highlight them all and click 'Import By Name'.
  5) Select 'Rebuild Import Table' and click OK once done. 
  6) You're done. File->Save As the file as NxCharacter.dll (make a backup if necessary).
- ----------------------------------------------------------------------
+
+By default, the client will connect to localhost (127.0.0.1). 
+To configure a custom IP, simply create a new file in your game directory called `Orion.ini`. 
+Within the file, configure the following where `127.0.0.1` is the IP you want to connect to:
+```
+[Settings]
+ClientIP=127.0.0.1
+```
+
+----------------------------------------------------------------------
  ## Client Documentation
 First, take note that MS2 clients up to v9 (latest), the following applies:
  * The client does **NOT** contain IP Checks
